@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { PriceTimestamp } from 'src/database/entities/priceTimestamp.entity';
 
 export const dbConfig = registerAs('database', (): TypeOrmModuleOptions => {
     return {
@@ -9,7 +10,9 @@ export const dbConfig = registerAs('database', (): TypeOrmModuleOptions => {
         username: process.env.DB_USER,
         password: process.env.DB_PASS,
         database: process.env.DB_NAME,
-        synchronize: process.env.SYNC === 'true',
-        entities: []
+        synchronize: process.env.DB_SYNC === 'true',
+        entities: [
+            PriceTimestamp
+        ]
     };
 });
