@@ -1,6 +1,12 @@
-import { IsDate, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsDate, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
-export class PriceTimestampDTO {
+export class AddPriceTimestampDTO {
+
+    @IsNotEmpty()
+    @IsEnum(CryptoTickers)
+    ticker: CryptoTickers;
+
     @IsNotEmpty()
     @IsDate()
     timestamp: Date;

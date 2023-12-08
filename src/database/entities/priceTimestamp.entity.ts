@@ -1,9 +1,13 @@
+import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class PriceTimestamp {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column({ type: 'enum', enum: CryptoTickers })
+    ticker: CryptoTickers;
 
     @Column({ type: 'timestamp' })
     timestamp: Date;

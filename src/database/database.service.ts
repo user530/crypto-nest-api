@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PriceTimestamp } from './entities/priceTimestamp.entity';
 import { Between, Repository } from 'typeorm';
-import { PriceTimestampDTO } from './dtos/priceTimestamp.dto';
+import { AddPriceTimestampDTO } from './dtos/priceTimestamp.dto';
 
 
 @Injectable()
@@ -30,7 +30,7 @@ export class DatabaseService {
         })
     }
 
-    async addStamps(timeStampDTOs: PriceTimestampDTO | PriceTimestampDTO[]): Promise<PriceTimestamp[]> {
+    async addStamps(timeStampDTOs: AddPriceTimestampDTO | AddPriceTimestampDTO[]): Promise<PriceTimestamp[]> {
         console.log('DB Service - Add stamp fired!');
 
         const stamps: PriceTimestamp[] = Array.isArray(timeStampDTOs)

@@ -1,7 +1,8 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { DatabaseService } from './database/database.service';
 import { PriceTimestamp } from './database/entities/priceTimestamp.entity';
-import { PriceTimestampDTO } from './database/dtos/priceTimestamp.dto';
+import { AddPriceTimestampDTO } from './database/dtos/priceTimestamp.dto';
+import { CryptoTickers } from './shared/enums/tickers.enum';
 
 @Controller()
 export class AppController {
@@ -14,7 +15,7 @@ export class AppController {
 
   @Get('/populate')
   async addRandom(): Promise<PriceTimestamp[]> {
-    const someStamps: PriceTimestampDTO[] = [
+    const someStamps: AddPriceTimestampDTO[] = [
       {
         "datetime": "2023-12-07 16:00:00",
         "open": "43670.82000",
@@ -171,6 +172,7 @@ export class AppController {
       }
     ].map(({ datetime, open, high, low, close }) => (
       {
+        ticker: CryptoTickers['BTC/USD'],
         timestamp: new Date(datetime),
         openPrice: parseFloat(open),
         closePrice: parseFloat(close),
