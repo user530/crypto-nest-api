@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { ConfigModule } from '@nestjs/config';
 import { dbConfig } from 'config/db.config';
-import { DatabaseModule } from './database/database.module';
-import { DatabaseService } from './database/database.service';
+// import { AppController } from './app.controller';
+// import { DatabaseModule } from './database/database.module';
+// import { DatabaseService } from './database/database.service';
+import { CryptoModule } from './crypto/crypto.module';
 
 @Module({
   imports: [
@@ -11,9 +12,9 @@ import { DatabaseService } from './database/database.service';
       isGlobal: true,
       load: [dbConfig],
     }),
-    DatabaseModule,
+    CryptoModule,
   ],
-  controllers: [AppController],
-  providers: [DatabaseService],
+  // controllers: [AppController],
+  // providers: [DatabaseService],
 })
 export class AppModule { }

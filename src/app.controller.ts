@@ -364,6 +364,7 @@ export class AppController {
     console.log(vStart, vEnd, vSymbol, vInterval);
 
     // CREATE DATE ARRAY
+    // IF INTERVAL IS MONTH (NOT EQUAL) => JUST return month stamps between two dates
     const firstStampDate = new Date(Math.ceil(vStart.getTime() / vInterval) * vInterval);
     const lastStampDate = new Date(Math.floor(vEnd.getTime() / vInterval) * vInterval);
 
