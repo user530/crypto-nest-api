@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PriceTimestamp } from './entities/priceTimestamp.entity';
-import { Between, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AddPriceTimestampDTO } from './dtos/priceTimestamp.dto';
+import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
 
 @Injectable()
@@ -18,14 +19,11 @@ export class DatabaseService {
         return this.priceStampRepo.find({});
     }
 
-    getFromRange({ startDate, endDate }: { startDate: Date, endDate: Date }): Promise<PriceTimestamp[]> {
-        if (startDate > endDate) {
-            throw new Error('Incorrect date range!');
-        }
-
+    getTargetStamps(ticker: CryptoTickers, datesToFind: Date[]): Promise<PriceTimestamp[]> {
         return this.priceStampRepo.find({
             where: {
-                timestamp: Between(startDate, endDate)
+                ticker: ticker,
+                timestamp: In([...datesToFind]),
             }
         })
     }
