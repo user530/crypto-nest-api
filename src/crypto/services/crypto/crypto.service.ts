@@ -54,7 +54,7 @@ export class CryptoService implements ICryptoService {
 
     }
 
-    async validateQuery(query: ParsedQs): Promise<RequestParamsDTO> {
+    private async validateQuery(query: ParsedQs): Promise<RequestParamsDTO> {
         console.log('Crypto Service - Validate Query Fired!');
 
         const queryDTO = plainToClass(RequestParamsDTO, query, { enableImplicitConversion: true });
@@ -75,11 +75,7 @@ export class CryptoService implements ICryptoService {
         return queryDTO;
     };
 
-    getIntervalTime(timeInterval: TimeIntervals): number {
-        return IntervalToTime[timeInterval];
-    }
-
-    generateTimestampArray(requestParamsDTO: RequestParamsDTO): Date[] {
+    private generateTimestampArray(requestParamsDTO: RequestParamsDTO): Date[] {
         const { start_date: startDate, end_date: endDate, interval } = requestParamsDTO;
 
         let firstStamp: Date = undefined, dateIterator: (date: Date) => Date = undefined;
@@ -99,7 +95,11 @@ export class CryptoService implements ICryptoService {
         }
 
         return this.generateStampsArray(firstStamp, endDate, dateIterator);
-    }
+    };
+
+    private getIntervalTime(timeInterval: TimeIntervals): number {
+        return IntervalToTime[timeInterval];
+    };
 
     private generateStampsArray(fromDate: Date, toDate: Date, nextDate: (date: Date) => Date) {
         const stampsArray: Date[] = [];
@@ -113,7 +113,7 @@ export class CryptoService implements ICryptoService {
         }
 
         return stampsArray;
-    }
+    };
 
     private closestIntervalStart(fromDate: Date, intervalTime: number): Date {
         return new Date(
@@ -139,7 +139,7 @@ export class CryptoService implements ICryptoService {
             1,
             fromDate.getTimezoneOffset() / -60
         )
-    }
+    };
 
     private closestMonthStart(fromDate: Date): Date {
         return fromDate.getTime() === new Date(
@@ -150,5 +150,16 @@ export class CryptoService implements ICryptoService {
         ).getTime()
             ? fromDate
             : this.nextMonthStart(fromDate);
-    }
+    };
+
+    private generateMetadata(requestParamsDTO: RequestParamsDTO): RequestParamsDTO {
+        const { start_date, end_date, interval, symbol } = requestParamsDTO;
+
+        return {
+            start_date,
+            end_date,
+            interval,
+            symbol,
+        }
+    };
 }
