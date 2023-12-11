@@ -83,6 +83,9 @@ export class CryptoService implements ICryptoService {
         const { start_date, end_date, interval } = requestParamsDTO;
         const timestampArr = [];
 
+        // If 
+
+
         // Handle "Variable interval"
         if (interval === TimeIntervals['1 month']) {
             // If start is the first date of the month - first stamp or first day of the next month
@@ -124,5 +127,74 @@ export class CryptoService implements ICryptoService {
             }
         }
         return timestampArr;
+    }
+
+    generateTimedStamps(startDate: Date, endDate: Date, intervalTime: number): Date[] {
+        const result: Date[] = [];
+        const firstDate = new Date(
+            Math.ceil(startDate.getTime() / intervalTime) * intervalTime
+        )
+
+        for (
+            let iteratorTime = firstDate.getTime();
+            iteratorTime <= endDate.getTime();
+            iteratorTime += intervalTime
+        ) {
+            result.push(new Date(iteratorTime));
+        }
+
+        return result;
+    }
+
+    generateWeeklyStamps(startDate: Date, endDate: Date): Date[] {
+        const result: Date[] = [];
+        const firstDate = new Date(
+            startDate.getUTCFullYear(),
+            startDate.getUTCMonth(),
+            startDate.getDate() + (8 - startDate.getUTCDay()) % 7,  // The date of the closest monday
+            startDate.getTimezoneOffset() / -60,    // Adjust for the timezone
+        );
+
+        for (
+            let iteratorTime = firstDate.getTime();
+            iteratorTime < endDate.getTime();
+            iteratorTime += 1000 * 60 * 60 * 24 * 7     // 7 day worth of time
+        ) {
+            result.push(new Date(iteratorTime));
+        }
+
+        return result;
+    }
+
+    generateMonthStamps(startDate: Date, endDate: Date): Date[] {
+        const result: Date[] = [];
+        const firstDate = startDate.getDate() === 1
+            ? new Date(
+                startDate.getUTCFullYear(),
+                startDate.getUTCMonth(),
+                1,
+                startDate.getTimezoneOffset() / -60
+            )
+            : new Date(
+                startDate.getUTCFullYear(),
+                startDate.getUTCMonth() + 1,
+                1,
+                startDate.getTimezoneOffset() / -60
+            );
+
+        for (
+            let iteratorDate = firstDate;
+            iteratorDate <= endDate;
+            iteratorDate = new Date(
+                iteratorDate.getUTCFullYear(),
+                iteratorDate.getUTCMonth() + 1,
+                1,
+                iteratorDate.getTimezoneOffset() / -60
+            )
+        ) {
+            result.push(iteratorDate);
+        }
+
+        return result;
     }
 }
