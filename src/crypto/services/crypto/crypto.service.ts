@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { ErrorDTO, GetCryptoDTO, RequestParamsDTO } from './dtos';
+import { ErrorDTO, GetCryptoDTO, RequestParamsDTO } from '../../dtos';
 import { ParsedQs } from 'qs';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
-import { IntervalToTime } from 'src/shared/intervalsToTime.map';
 import { DatabaseService } from 'src/database/database.service';
 import { FetchMarketDataService } from '../fetch-market-data/fetch-market-data.service';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
+import { TimeLogicService } from '../time-logic/time-logic.service';
 
 interface ICryptoService {
     processRequest(query: Request['query']): Promise<GetCryptoDTO | ErrorDTO>
@@ -20,6 +20,7 @@ export class CryptoService implements ICryptoService {
     constructor(
         private readonly dbService: DatabaseService,
         private readonly fetchService: FetchMarketDataService,
+        private readonly timeLogicService: TimeLogicService,
     ) { }
 
     async processRequest(query: ParsedQs): Promise<GetCryptoDTO | ErrorDTO> {
@@ -29,7 +30,7 @@ export class CryptoService implements ICryptoService {
             const queryDTO = await this.validateQuery(query);
             console.log(queryDTO);
 
-            const timestamps = this.generateTimestampArray(queryDTO);
+            const timestamps = this.timeLogicService.generateTimestampArray(queryDTO);
 
             console.log(timestamps);
 
@@ -40,12 +41,18 @@ export class CryptoService implements ICryptoService {
                     queryDTO.interval,
                     timestamps);
 
-            if (priceTimestamps.length !== timestamps.length)
+            if (priceTimestamps.length !== timestamps.length) {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
-            else
+                // FILTER OUT MISSING PRICE STAMPS
+                // FETCH SERVICE - FETCH
+                // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
+            }
+            else {
                 console.log('ALL DATA FOUND!');
+                // FINAL STAMPS = priceTimestamps;
+            }
 
-            // Placeholder
+            // Placeholder - TRANSFORM FINAL PRICE STAMPS INTO THE DTO FORMAT
             const data: GetCryptoDTO['data'] = priceTimestamps.map(priceStamp => (
                 {
                     datetime: priceStamp.timestamp,
@@ -55,6 +62,7 @@ export class CryptoService implements ICryptoService {
                     close: priceStamp.closePrice,
                 }))
 
+            // ADD META DATA
             const meta = this.generateMetadata(queryDTO, data.length);
 
             return {
@@ -65,29 +73,6 @@ export class CryptoService implements ICryptoService {
         } catch (error) {
             return { status: 'error', errors: [error.message] };
         }
-
-        //  CryptoService - Transform [query params] into [processed params]
-        //  CryptoService - From [processed params] get the [number of expected stamps]
-
-        //  CryptoService - From [processed params] return an [array of requested stamps]
-
-        //  DB Service - From [array of requested stamps] return an [array of PriceStamps]
-
-        //  CryptoService - Check if [array of PriceStamps] is the same length as [number of expected stamps]
-
-        //  CryptoService - if not equal -> handle lack of data
-
-        // Lack of data handler:
-        //      prepare query params based on API interface
-        //      Fetch Service - Fetch data
-        //      DB service - Add Missing PriceStamps
-        //      Return fetched data
-
-        // this.cryptoService.processRequest();
-        // this.fetchDataService.fetchData();
-        // await this.dbService.getAll();
-
-
     }
 
     async addRandom() {
@@ -146,83 +131,6 @@ export class CryptoService implements ICryptoService {
         }
 
         return queryDTO;
-    };
-
-    private generateTimestampArray(requestParamsDTO: RequestParamsDTO): Date[] {
-        const { start_date: startDate, end_date: endDate, interval } = requestParamsDTO;
-
-        let firstStamp: Date = undefined, dateIterator: (date: Date) => Date = undefined;
-
-        if (interval === TimeIntervals['1 month']) {
-            firstStamp = this.closestMonthStart(startDate);
-            dateIterator = this.nextMonthStart;
-        }
-        else if (interval === TimeIntervals['1 week']) {
-            firstStamp = this.closestWeekStart(endDate);
-            dateIterator = (date: Date) => new Date(date.getTime() + this.getIntervalTime(interval));
-        }
-        else {
-            const intervalTime = this.getIntervalTime(interval);
-            firstStamp = this.closestIntervalStart(startDate, intervalTime);
-            dateIterator = (date: Date) => new Date(date.getTime() + intervalTime);
-        }
-
-        return this.generateStampsArray(firstStamp, endDate, dateIterator);
-    };
-
-    private getIntervalTime(timeInterval: TimeIntervals): number {
-        return IntervalToTime[timeInterval];
-    };
-
-    private generateStampsArray(fromDate: Date, toDate: Date, nextDate: (date: Date) => Date) {
-        const stampsArray: Date[] = [];
-
-        for (
-            let iteratorDate = fromDate;
-            iteratorDate <= toDate;
-            iteratorDate = nextDate(iteratorDate)
-        ) {
-            stampsArray.push(iteratorDate);
-        }
-
-        return stampsArray;
-    };
-
-    private closestIntervalStart(fromDate: Date, intervalTime: number): Date {
-        return new Date(
-            Math.ceil(
-                fromDate.getTime() / intervalTime
-            ) * intervalTime
-        )
-    };
-
-    private closestWeekStart(fromDate: Date): Date {
-        return new Date(
-            fromDate.getFullYear(),
-            fromDate.getMonth(),
-            fromDate.getDate() + (8 - fromDate.getDay()) % 7,     // Closest monday
-            fromDate.getTimezoneOffset() / -60      // Adjust for the timezone
-        )
-    };
-
-    private nextMonthStart(fromDate: Date): Date {
-        return new Date(
-            fromDate.getFullYear(),
-            fromDate.getMonth() + 1,
-            1,
-            fromDate.getTimezoneOffset() / -60
-        )
-    };
-
-    private closestMonthStart(fromDate: Date): Date {
-        return fromDate.getTime() === new Date(
-            fromDate.getFullYear(),
-            fromDate.getMonth(),
-            1,
-            fromDate.getTimezoneOffset() / -60
-        ).getTime()
-            ? fromDate
-            : this.nextMonthStart(fromDate);
     };
 
     private generateMetadata(requestParamsDTO: RequestParamsDTO, data_size: number): GetCryptoDTO['meta'] {

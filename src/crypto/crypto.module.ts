@@ -4,10 +4,11 @@ import { CryptoController } from './crypto.controller';
 import { DatabaseModule } from 'src/database/database.module';
 import { DatabaseService } from 'src/database/database.service';
 import { CryptoService } from './services/crypto/crypto.service';
+import { TimeLogicService } from './services/time-logic/time-logic.service';
 
 @Module({
   imports: [DatabaseModule],
-  providers: [DatabaseService, FetchMarketDataService, CryptoService],
+  providers: [DatabaseService, FetchMarketDataService, CryptoService, TimeLogicService],
   controllers: [CryptoController]
 })
 export class CryptoModule { }

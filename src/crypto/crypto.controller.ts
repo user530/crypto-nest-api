@@ -1,7 +1,7 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { CryptoService } from './services/crypto/crypto.service';
 import { Request } from 'express';
-import { ErrorDTO, GetCryptoDTO } from './services/crypto/dtos';
+import { ErrorDTO, GetCryptoDTO } from './dtos';
 
 
 interface ICryptoController {
