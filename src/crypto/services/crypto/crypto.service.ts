@@ -83,49 +83,48 @@ export class CryptoService implements ICryptoService {
         const { start_date, end_date, interval } = requestParamsDTO;
         const timestampArr = [];
 
-        // If 
+        // // Handle "Variable interval"
+        // if (interval === TimeIntervals['1 month']) {
+        //     // If start is the first date of the month - first stamp or first day of the next month
+        //     const firstStampDate = start_date.getUTCDate() === 1
+        //         ? new Date(start_date.getUTCFullYear(),
+        //             start_date.getUTCMonth(),
+        //             1,
+        //             start_date.getTimezoneOffset() / -60)   // We need to add timezone offset to prevent infinite loop
+        //         : new Date(start_date.getUTCFullYear(),
+        //             start_date.getUTCMonth() + 1,
+        //             1,
+        //             start_date.getTimezoneOffset() / -60);
+
+        //     for (let iteratorDate = firstStampDate;
+        //         (iteratorDate.getUTCFullYear() <= end_date.getUTCFullYear()) &&
+        //         (iteratorDate.getUTCMonth() <= end_date.getUTCMonth());
+        //         iteratorDate = new Date(iteratorDate.getUTCFullYear(),
+        //             iteratorDate.getUTCMonth() + 1,
+        //             1,
+        //             iteratorDate.getTimezoneOffset() / -60)) {
+        //         timestampArr.push(iteratorDate);
+        //     }
+
+        //     return timestampArr;
+        // }
+        // else {
+        //     const intervalTime = this.getIntervalTime(interval);
+        //     const firstStampDate = new Date(Math.ceil(start_date.getTime() / intervalTime) * intervalTime);
+
+        //     console.log(`IntervalTime - ${intervalTime}`);
+        //     console.log(`FirstStampDate:`, firstStampDate);
+
+        //     for (
+        //         let iteratorTime = firstStampDate.getTime();
+        //         iteratorTime <= end_date.getTime();
+        //         iteratorTime += intervalTime
+        //     ) {
+        //         timestampArr.push(new Date(iteratorTime))
+        //     }
+        // }
 
 
-        // Handle "Variable interval"
-        if (interval === TimeIntervals['1 month']) {
-            // If start is the first date of the month - first stamp or first day of the next month
-            const firstStampDate = start_date.getUTCDate() === 1
-                ? new Date(start_date.getUTCFullYear(),
-                    start_date.getUTCMonth(),
-                    1,
-                    start_date.getTimezoneOffset() / -60)   // We need to add timezone offset to prevent infinite loop
-                : new Date(start_date.getUTCFullYear(),
-                    start_date.getUTCMonth() + 1,
-                    1,
-                    start_date.getTimezoneOffset() / -60);
-
-            for (let iteratorDate = firstStampDate;
-                (iteratorDate.getUTCFullYear() <= end_date.getUTCFullYear()) &&
-                (iteratorDate.getUTCMonth() <= end_date.getUTCMonth());
-                iteratorDate = new Date(iteratorDate.getUTCFullYear(),
-                    iteratorDate.getUTCMonth() + 1,
-                    1,
-                    iteratorDate.getTimezoneOffset() / -60)) {
-                timestampArr.push(iteratorDate);
-            }
-
-            return timestampArr;
-        }
-        else {
-            const intervalTime = this.getIntervalTime(interval);
-            const firstStampDate = new Date(Math.ceil(start_date.getTime() / intervalTime) * intervalTime);
-
-            console.log(`IntervalTime - ${intervalTime}`);
-            console.log(`FirstStampDate:`, firstStampDate);
-
-            for (
-                let iteratorTime = firstStampDate.getTime();
-                iteratorTime <= end_date.getTime();
-                iteratorTime += intervalTime
-            ) {
-                timestampArr.push(new Date(iteratorTime))
-            }
-        }
         return timestampArr;
     }
 
@@ -196,5 +195,56 @@ export class CryptoService implements ICryptoService {
         }
 
         return result;
+    }
+
+    private generateStampsArray(fromDate: Date, toDate: Date, nextDate: (date: Date) => Date) {
+        const stampsArray: Date[] = [];
+
+        for (
+            let iteratorDate = fromDate;
+            iteratorDate <= toDate;
+            iteratorDate = nextDate(iteratorDate)
+        ) {
+            stampsArray.push(iteratorDate);
+        }
+
+        return stampsArray;
+    }
+
+    private closestIntervalStart(fromDate: Date, intervalTime: number): Date {
+        return new Date(
+            Math.ceil(
+                fromDate.getTime() / intervalTime
+            ) * intervalTime
+        )
+    };
+
+    private closestWeekStart(fromDate: Date): Date {
+        return new Date(
+            fromDate.getUTCFullYear(),
+            fromDate.getUTCMonth(),
+            fromDate.getUTCDate() + (8 - fromDate.getUTCDay()) % 7,     // Closest monday
+            fromDate.getTimezoneOffset() / -60      // Adjust for the timezone
+        )
+    };
+
+    private nextMonthStart(fromDate: Date): Date {
+        return new Date(
+            fromDate.getUTCFullYear(),
+            fromDate.getUTCMonth() + 1,
+            1,
+            fromDate.getTimezoneOffset() / -60
+        )
+    }
+
+    private closestMonthStart(fromDate: Date): Date {
+        return fromDate.getTime() === new Date(
+            fromDate.getUTCFullYear(),
+            fromDate.getUTCMonth(),
+            1,
+            fromDate.getTimezoneOffset() / -60
+        ).getTime()
+            ? fromDate
+            : this.nextMonthStart(fromDate);
     }
 }
