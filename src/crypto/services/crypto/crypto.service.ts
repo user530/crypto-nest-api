@@ -80,121 +80,25 @@ export class CryptoService implements ICryptoService {
     }
 
     generateTimestampArray(requestParamsDTO: RequestParamsDTO): Date[] {
-        const { start_date, end_date, interval } = requestParamsDTO;
-        const timestampArr = [];
+        const { start_date: startDate, end_date: endDate, interval } = requestParamsDTO;
 
-        // // Handle "Variable interval"
-        // if (interval === TimeIntervals['1 month']) {
-        //     // If start is the first date of the month - first stamp or first day of the next month
-        //     const firstStampDate = start_date.getUTCDate() === 1
-        //         ? new Date(start_date.getUTCFullYear(),
-        //             start_date.getUTCMonth(),
-        //             1,
-        //             start_date.getTimezoneOffset() / -60)   // We need to add timezone offset to prevent infinite loop
-        //         : new Date(start_date.getUTCFullYear(),
-        //             start_date.getUTCMonth() + 1,
-        //             1,
-        //             start_date.getTimezoneOffset() / -60);
+        let firstStamp: Date = undefined, dateIterator: (date: Date) => Date = undefined;
 
-        //     for (let iteratorDate = firstStampDate;
-        //         (iteratorDate.getUTCFullYear() <= end_date.getUTCFullYear()) &&
-        //         (iteratorDate.getUTCMonth() <= end_date.getUTCMonth());
-        //         iteratorDate = new Date(iteratorDate.getUTCFullYear(),
-        //             iteratorDate.getUTCMonth() + 1,
-        //             1,
-        //             iteratorDate.getTimezoneOffset() / -60)) {
-        //         timestampArr.push(iteratorDate);
-        //     }
-
-        //     return timestampArr;
-        // }
-        // else {
-        //     const intervalTime = this.getIntervalTime(interval);
-        //     const firstStampDate = new Date(Math.ceil(start_date.getTime() / intervalTime) * intervalTime);
-
-        //     console.log(`IntervalTime - ${intervalTime}`);
-        //     console.log(`FirstStampDate:`, firstStampDate);
-
-        //     for (
-        //         let iteratorTime = firstStampDate.getTime();
-        //         iteratorTime <= end_date.getTime();
-        //         iteratorTime += intervalTime
-        //     ) {
-        //         timestampArr.push(new Date(iteratorTime))
-        //     }
-        // }
-
-
-        return timestampArr;
-    }
-
-    generateTimedStamps(startDate: Date, endDate: Date, intervalTime: number): Date[] {
-        const result: Date[] = [];
-        const firstDate = new Date(
-            Math.ceil(startDate.getTime() / intervalTime) * intervalTime
-        )
-
-        for (
-            let iteratorDate = firstDate;
-            iteratorDate <= endDate;
-            iteratorDate = new Date(iteratorDate.getTime() + intervalTime)
-        ) {
-            result.push(iteratorDate);
+        if (interval === TimeIntervals['1 month']) {
+            firstStamp = this.closestMonthStart(startDate);
+            dateIterator = this.nextMonthStart;
+        }
+        else if (interval === TimeIntervals['1 week']) {
+            firstStamp = this.closestWeekStart(endDate);
+            dateIterator = (date: Date) => new Date(date.getTime() + this.getIntervalTime(interval));
+        }
+        else {
+            const intervalTime = this.getIntervalTime(interval);
+            firstStamp = this.closestIntervalStart(startDate, intervalTime);
+            dateIterator = (date: Date) => new Date(date.getTime() + intervalTime);
         }
 
-        return result;
-    }
-
-    generateWeeklyStamps(startDate: Date, endDate: Date): Date[] {
-        const result: Date[] = [];
-        const firstDate = new Date(
-            startDate.getUTCFullYear(),
-            startDate.getUTCMonth(),
-            startDate.getDate() + (8 - startDate.getUTCDay()) % 7,  // The date of the closest monday
-            startDate.getTimezoneOffset() / -60,    // Adjust for the timezone
-        );
-
-        for (
-            let iteratorDate = firstDate;
-            iteratorDate < endDate;
-            iteratorDate = new Date(iteratorDate.getTime() + 1000 * 60 * 60 * 24 * 7)     // 7 day worth of time
-        ) {
-            result.push(iteratorDate);
-        }
-
-        return result;
-    }
-
-    generateMonthStamps(startDate: Date, endDate: Date): Date[] {
-        const result: Date[] = [];
-        const firstDate = startDate.getDate() === 1
-            ? new Date(
-                startDate.getUTCFullYear(),
-                startDate.getUTCMonth(),
-                1,
-                startDate.getTimezoneOffset() / -60
-            )
-            : new Date(
-                startDate.getUTCFullYear(),
-                startDate.getUTCMonth() + 1,
-                1,
-                startDate.getTimezoneOffset() / -60
-            );
-
-        for (
-            let iteratorDate = firstDate;
-            iteratorDate <= endDate;
-            iteratorDate = new Date(
-                iteratorDate.getUTCFullYear(),
-                iteratorDate.getUTCMonth() + 1,
-                1,
-                iteratorDate.getTimezoneOffset() / -60
-            )
-        ) {
-            result.push(iteratorDate);
-        }
-
-        return result;
+        return this.generateStampsArray(firstStamp, endDate, dateIterator);
     }
 
     private generateStampsArray(fromDate: Date, toDate: Date, nextDate: (date: Date) => Date) {
