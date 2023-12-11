@@ -136,11 +136,11 @@ export class CryptoService implements ICryptoService {
         )
 
         for (
-            let iteratorTime = firstDate.getTime();
-            iteratorTime <= endDate.getTime();
-            iteratorTime += intervalTime
+            let iteratorDate = firstDate;
+            iteratorDate <= endDate;
+            iteratorDate = new Date(iteratorDate.getTime() + intervalTime)
         ) {
-            result.push(new Date(iteratorTime));
+            result.push(iteratorDate);
         }
 
         return result;
@@ -156,11 +156,11 @@ export class CryptoService implements ICryptoService {
         );
 
         for (
-            let iteratorTime = firstDate.getTime();
-            iteratorTime < endDate.getTime();
-            iteratorTime += 1000 * 60 * 60 * 24 * 7     // 7 day worth of time
+            let iteratorDate = firstDate;
+            iteratorDate < endDate;
+            iteratorDate = new Date(iteratorDate.getTime() + 1000 * 60 * 60 * 24 * 7)     // 7 day worth of time
         ) {
-            result.push(new Date(iteratorTime));
+            result.push(iteratorDate);
         }
 
         return result;
