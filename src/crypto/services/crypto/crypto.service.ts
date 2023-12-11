@@ -34,7 +34,16 @@ export class CryptoService implements ICryptoService {
             console.log(timestamps);
 
             // Not final
-            const priceTimestamps = await this.dbService.getTargetStamps(CryptoTickers['BTC/USD'], timestamps);
+            const priceTimestamps = await this.dbService
+                .getTargetStamps(
+                    CryptoTickers['BTC/USD'],
+                    queryDTO.interval,
+                    timestamps);
+
+            if (priceTimestamps.length !== timestamps.length)
+                console.log('MISSING SOME DATA! NEED TO FETCH!');
+            else
+                console.log('ALL DATA FOUND!');
 
             // Placeholder
             const data: GetCryptoDTO['data'] = priceTimestamps.map(priceStamp => (
@@ -79,6 +88,43 @@ export class CryptoService implements ICryptoService {
         // await this.dbService.getAll();
 
 
+    }
+
+    async addRandom() {
+        const BTCHourStamps = [].map(({ datetime, open, high, low, close }) => (
+            {
+                ticker: CryptoTickers['BTC/USD'],
+                interval: TimeIntervals['1 hour'],
+                timestamp: new Date(datetime),
+                openPrice: parseFloat(open),
+                closePrice: parseFloat(close),
+                highPrice: parseFloat(high),
+                lowPrice: parseFloat(low)
+            }));
+
+        const BTCMinStamps = [].map(({ datetime, open, high, low, close }) => (
+            {
+                ticker: CryptoTickers['BTC/USD'],
+                interval: TimeIntervals['1 min'],
+                timestamp: new Date(datetime),
+                openPrice: parseFloat(open),
+                closePrice: parseFloat(close),
+                highPrice: parseFloat(high),
+                lowPrice: parseFloat(low)
+            }))
+
+        const ETHStamps = [].map(({ datetime, open, high, low, close }) => (
+            {
+                ticker: CryptoTickers['ETH/USD'],
+                interval: TimeIntervals['1 hour'],
+                timestamp: new Date(datetime),
+                openPrice: parseFloat(open),
+                closePrice: parseFloat(close),
+                highPrice: parseFloat(high),
+                lowPrice: parseFloat(low)
+            }));
+
+        return await this.dbService.addStamps([...BTCHourStamps, ...ETHStamps, ...BTCMinStamps]);
     }
 
     private async validateQuery(query: ParsedQs): Promise<RequestParamsDTO> {
@@ -152,17 +198,17 @@ export class CryptoService implements ICryptoService {
 
     private closestWeekStart(fromDate: Date): Date {
         return new Date(
-            fromDate.getUTCFullYear(),
-            fromDate.getUTCMonth(),
-            fromDate.getUTCDate() + (8 - fromDate.getUTCDay()) % 7,     // Closest monday
+            fromDate.getFullYear(),
+            fromDate.getMonth(),
+            fromDate.getDate() + (8 - fromDate.getDay()) % 7,     // Closest monday
             fromDate.getTimezoneOffset() / -60      // Adjust for the timezone
         )
     };
 
     private nextMonthStart(fromDate: Date): Date {
         return new Date(
-            fromDate.getUTCFullYear(),
-            fromDate.getUTCMonth() + 1,
+            fromDate.getFullYear(),
+            fromDate.getMonth() + 1,
             1,
             fromDate.getTimezoneOffset() / -60
         )
@@ -170,8 +216,8 @@ export class CryptoService implements ICryptoService {
 
     private closestMonthStart(fromDate: Date): Date {
         return fromDate.getTime() === new Date(
-            fromDate.getUTCFullYear(),
-            fromDate.getUTCMonth(),
+            fromDate.getFullYear(),
+            fromDate.getMonth(),
             1,
             fromDate.getTimezoneOffset() / -60
         ).getTime()

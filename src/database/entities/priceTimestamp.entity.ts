@@ -1,3 +1,4 @@
+import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -8,6 +9,9 @@ export class PriceTimestamp {
 
     @Column({ type: 'enum', enum: CryptoTickers })
     ticker: CryptoTickers;
+
+    @Column({ type: 'enum', enum: TimeIntervals })
+    interval: TimeIntervals;
 
     @Column({ type: 'timestamp' })
     timestamp: Date;

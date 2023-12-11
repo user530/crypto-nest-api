@@ -4,6 +4,7 @@ import { PriceTimestamp } from './entities/priceTimestamp.entity';
 import { In, Repository } from 'typeorm';
 import { AddPriceTimestampDTO } from './dtos/priceTimestamp.dto';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
+import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 
 
 @Injectable()
@@ -19,11 +20,12 @@ export class DatabaseService {
         return this.priceStampRepo.find({});
     }
 
-    getTargetStamps(ticker: CryptoTickers, datesToFind: Date[]): Promise<PriceTimestamp[]> {
+    getTargetStamps(ticker: CryptoTickers, interval: TimeIntervals, stampsToFind: Date[]): Promise<PriceTimestamp[]> {
         return this.priceStampRepo.find({
             where: {
-                ticker: ticker,
-                timestamp: In([...datesToFind]),
+                ticker,
+                interval,
+                timestamp: In([...stampsToFind]),
             }
         })
     }
