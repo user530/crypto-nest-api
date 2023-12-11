@@ -1,7 +1,8 @@
 import { SuccessAPIMessage } from '../types/apiMessages';
-import { Equals, IsDate, IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
+import { Equals, IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { RequestParamsDTO } from './requestParams.dto';
+import { CryptoTickers } from 'src/shared/enums/tickers.enum';
+import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 
 class GetCryptoData {
     @IsNotEmpty()
@@ -25,6 +26,28 @@ class GetCryptoData {
     close: number;
 }
 
+class GetCryptoMeta {
+    @IsNotEmpty()
+    @IsEnum(CryptoTickers)
+    symbol: CryptoTickers;
+
+    @IsNotEmpty()
+    @IsEnum(TimeIntervals)
+    interval: TimeIntervals;
+
+    @IsNotEmpty()
+    @IsDate()
+    start_date: Date;
+
+    @IsNotEmpty()
+    @IsDate()
+    end_date: Date;
+
+    @IsNotEmpty()
+    @IsNumber()
+    data_size: number;
+}
+
 export class GetCryptoDTO implements SuccessAPIMessage {
     @IsNotEmpty()
     @IsString()
@@ -33,8 +56,8 @@ export class GetCryptoDTO implements SuccessAPIMessage {
 
     @IsObject()
     @ValidateNested()
-    @Type(() => RequestParamsDTO)
-    meta: RequestParamsDTO;
+    @Type(() => GetCryptoMeta)
+    meta: GetCryptoMeta;
 
     @IsObject()
     @ValidateNested({ each: true })

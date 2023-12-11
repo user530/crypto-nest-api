@@ -6,6 +6,9 @@ import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 import { IntervalToTime } from 'src/shared/intervalsToTime.map';
+import { DatabaseService } from 'src/database/database.service';
+import { FetchMarketDataService } from '../fetch-market-data/fetch-market-data.service';
+import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
 interface ICryptoService {
     processRequest(query: Request['query']): Promise<GetCryptoDTO | ErrorDTO>
@@ -13,6 +16,12 @@ interface ICryptoService {
 
 @Injectable()
 export class CryptoService implements ICryptoService {
+
+    constructor(
+        private readonly dbService: DatabaseService,
+        private readonly fetchService: FetchMarketDataService,
+    ) { }
+
     async processRequest(query: ParsedQs): Promise<GetCryptoDTO | ErrorDTO> {
         console.log('Crypto Service - Process request fired!');
         try {
@@ -20,16 +29,30 @@ export class CryptoService implements ICryptoService {
             const queryDTO = await this.validateQuery(query);
             console.log(queryDTO);
 
-            const timestampArr = this.generateTimestampArray(queryDTO);
+            const timestamps = this.generateTimestampArray(queryDTO);
 
-            console.log(timestampArr);
+            console.log(timestamps);
 
-            const meta = this.generateMetadata(queryDTO);
+            // Not final
+            const priceTimestamps = await this.dbService.getTargetStamps(CryptoTickers['BTC/USD'], timestamps);
 
-            return { 
-                status: 'success', 
-                meta, 
-                data: timestampArr.map((datetime: Date) => ({ datetime, open: 1, high: 2, low: 3, close: 4 })) };
+            // Placeholder
+            const data: GetCryptoDTO['data'] = priceTimestamps.map(priceStamp => (
+                {
+                    datetime: priceStamp.timestamp,
+                    open: priceStamp.openPrice,
+                    high: priceStamp.highPrice,
+                    low: priceStamp.lowPrice,
+                    close: priceStamp.closePrice,
+                }))
+
+            const meta = this.generateMetadata(queryDTO, data.length);
+
+            return {
+                status: 'success',
+                meta,
+                data
+            };
         } catch (error) {
             return { status: 'error', errors: [error.message] };
         }
@@ -156,7 +179,7 @@ export class CryptoService implements ICryptoService {
             : this.nextMonthStart(fromDate);
     };
 
-    private generateMetadata(requestParamsDTO: RequestParamsDTO): RequestParamsDTO {
+    private generateMetadata(requestParamsDTO: RequestParamsDTO, data_size: number): GetCryptoDTO['meta'] {
         const { start_date, end_date, interval, symbol } = requestParamsDTO;
 
         return {
@@ -164,6 +187,7 @@ export class CryptoService implements ICryptoService {
             end_date,
             interval,
             symbol,
+            data_size,
         }
     };
 }

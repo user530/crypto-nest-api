@@ -1,7 +1,5 @@
 import { Controller, Get, Req } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
 import { CryptoService } from './services/crypto/crypto.service';
-import { FetchMarketDataService } from './services/fetch-market-data/fetch-market-data.service';
 import { Request } from 'express';
 import { ErrorDTO, GetCryptoDTO } from './services/crypto/dtos';
 
@@ -14,8 +12,6 @@ interface ICryptoController {
 export class CryptoController implements ICryptoController {
     constructor(
         private readonly cryptoService: CryptoService,
-        private readonly dbService: DatabaseService,
-        private readonly fetchDataService: FetchMarketDataService,
     ) { }
 
     @Get('crypto')
