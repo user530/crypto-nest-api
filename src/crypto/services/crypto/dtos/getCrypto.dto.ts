@@ -37,7 +37,7 @@ export class GetCryptoDTO implements SuccessAPIMessage {
     meta: RequestParamsDTO;
 
     @IsObject()
-    @ValidateNested()
+    @ValidateNested({ each: true })
     @Type(() => GetCryptoData)
-    data: GetCryptoData;
+    data: GetCryptoData[];
 }

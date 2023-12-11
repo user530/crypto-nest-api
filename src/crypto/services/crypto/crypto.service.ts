@@ -24,8 +24,12 @@ export class CryptoService implements ICryptoService {
 
             console.log(timestampArr);
 
+            const meta = this.generateMetadata(queryDTO);
 
-            return { status: 'error', errors: ['Err'] };
+            return { 
+                status: 'success', 
+                meta, 
+                data: timestampArr.map((datetime: Date) => ({ datetime, open: 1, high: 2, low: 3, close: 4 })) };
         } catch (error) {
             return { status: 'error', errors: [error.message] };
         }
