@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { ErrorDTO, GetCryptoDTO, GetCryptoData, RequestParamsDTO } from '../../dtos';
+import { ErrorDTO, GetCryptoDTO, RequestParamsDTO } from '../../dtos';
 import { ParsedQs } from 'qs';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
@@ -54,10 +54,15 @@ export class CryptoService implements ICryptoService {
 
             );
 
+            // RESULT VARIABLE
+            let resultData = stampsFromDb;
+
             if (stampsFromDb.data.length !== timestamps.length) {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
                 // FETCH DATA FROM API AND TRANSFORM TO STAMPS
                 const stampsFromMarket = await this.marketDataService.getMarketData(queryDTO);
+
+                resultData = stampsFromMarket;
 
                 console.log(stampsFromDb);
                 console.log(stampsFromMarket);
@@ -94,23 +99,13 @@ export class CryptoService implements ICryptoService {
                 // FINAL STAMPS = priceTimestamps;
             }
 
-            // Placeholder - TRANSFORM FINAL PRICE STAMPS INTO THE DTO FORMAT
-            const data: GetCryptoData[] = stampsFromDb.map(priceStamp => (
-                {
-                    datetime: priceStamp.timestamp,
-                    open: priceStamp.openPrice,
-                    high: priceStamp.highPrice,
-                    low: priceStamp.lowPrice,
-                    close: priceStamp.closePrice,
-                }))
-
             // ADD META DATA
-            const meta = this.generateMetadata(queryDTO, data.length);
+            const meta = this.generateMetadata(queryDTO, resultData.data.length);
 
             return {
                 status: 'success',
                 meta,
-                data
+                data: resultData.data
             };
         } catch (error) {
             return { status: 'error', errors: [error.message] };

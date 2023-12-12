@@ -6,7 +6,6 @@ import { FetchAPIConfig } from 'config/fetch.config';
 import { GetCryptoData, RequestParamsDTO } from 'src/crypto/dtos';
 import { TwelveDataResponseDTO } from 'src/crypto/dtos/twelveDataResponse.dto';
 import { TwelveDataAPI } from 'src/crypto/types/twelveDataAPI';
-import { AddPriceTimestampDTO } from 'src/database/dtos/priceTimestamp.dto';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
