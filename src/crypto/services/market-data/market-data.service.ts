@@ -39,7 +39,7 @@ export class MarketDataService implements IMarketDataService<GetCryptoData[]> {
 
     private async makePriceStamps(marketData: TwelveDataAPI): Promise<GetCryptoData[]> {
         // Transform and Validate API output
-
+        console.log(marketData);
         const marketDataDTO = plainToClass(TwelveDataResponseDTO, marketData, { enableImplicitConversion: true });
 
         const errs = await validate(marketDataDTO);
@@ -50,10 +50,13 @@ export class MarketDataService implements IMarketDataService<GetCryptoData[]> {
             throw new Error('Failed to convert market data into the stamps!');
         }
 
-        // Transform DTO values into required output 
+        // Transform DTO values into required output (fix implicit datetime conversion that adds timezone offset )
         const priceStamps: GetCryptoData[] = marketDataDTO
             .values
-            .map((stamp) => ({ ...stamp }));
+            .map(({ datetime, open, high, low, close }) => ({
+                datetime: new Date(datetime.getTime() - datetime.getTimezoneOffset() * 1000 * 60),
+                open, high, low, close
+            }));
 
         return priceStamps;
     }
