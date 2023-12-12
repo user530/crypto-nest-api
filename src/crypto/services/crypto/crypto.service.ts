@@ -44,8 +44,17 @@ export class CryptoService implements ICryptoService {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
                 // FILTER OUT MISSING PRICE STAMPS
                 const fetched = await this.marketDataService.getMarketData(queryDTO);
+                console.log(priceTimestamps);
                 console.log(fetched);
-                // FETCH SERVICE - FETCH
+                // TRANSFORM INTO DB ENTITY
+                const toInsert = this.marketDataService.marketDataToEntity(
+                    {
+                        ticker: queryDTO.symbol,
+                        interval: queryDTO.interval,
+                        marketData: fetched
+                    });
+
+                console.log(toInsert)
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
             }
             else {

@@ -6,13 +6,18 @@ import { FetchAPIConfig } from 'config/fetch.config';
 import { GetCryptoData, RequestParamsDTO } from 'src/crypto/dtos';
 import { TwelveDataResponseDTO } from 'src/crypto/dtos/twelveDataResponse.dto';
 import { TwelveDataAPI } from 'src/crypto/types/twelveDataAPI';
+import { AddPriceTimestampDTO } from 'src/database/dtos/priceTimestamp.dto';
+import { TimeIntervals } from 'src/shared/enums/intervals.enum';
+import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
-interface IMarketDataService<Output> {
+interface IMarketDataService<Output, DBStampDTO> {
     getMarketData(requestParamsDTO: RequestParamsDTO): Promise<Output>;
+    marketDataToEntity({ ticker, interval, marketData }:
+        { ticker: CryptoTickers, interval: TimeIntervals, marketData: GetCryptoData[] }): DBStampDTO[];
 }
 
 @Injectable()
-export class MarketDataService implements IMarketDataService<GetCryptoData[]> {
+export class MarketDataService implements IMarketDataService<GetCryptoData[], AddPriceTimestampDTO> {
 
     constructor(private readonly configService: ConfigService) { }
 
@@ -24,6 +29,24 @@ export class MarketDataService implements IMarketDataService<GetCryptoData[]> {
         } catch (error) {
             throw error;
         }
+    }
+
+    marketDataToEntity(
+        { ticker, interval, marketData }:
+            { ticker: CryptoTickers, interval: TimeIntervals, marketData: GetCryptoData[] }
+    ): AddPriceTimestampDTO[] {
+        const dbPriceStamps: AddPriceTimestampDTO[] = marketData
+            .map(({ datetime, open, high, low, close }) => (
+                {
+                    ticker,
+                    interval,
+                    timestamp: datetime,
+                    openPrice: open,
+                    highPrice: high,
+                    lowPrice: low,
+                    closePrice: close
+                }))
+        return dbPriceStamps;
     }
 
     private async fetchMarketData(requestParamsDTO: RequestParamsDTO): Promise<TwelveDataAPI> {
@@ -39,7 +62,7 @@ export class MarketDataService implements IMarketDataService<GetCryptoData[]> {
 
     private async makePriceStamps(marketData: TwelveDataAPI): Promise<GetCryptoData[]> {
         // Transform and Validate API output
-        console.log(marketData);
+
         const marketDataDTO = plainToClass(TwelveDataResponseDTO, marketData, { enableImplicitConversion: true });
 
         const errs = await validate(marketDataDTO);
