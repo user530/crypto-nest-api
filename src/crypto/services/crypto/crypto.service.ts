@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { ErrorDTO, GetCryptoDTO, RequestParamsDTO } from '../../dtos';
+import { ErrorDTO, GetCryptoDTO, GetCryptoData, RequestParamsDTO } from '../../dtos';
 import { ParsedQs } from 'qs';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 import { DatabaseService } from 'src/database/database.service';
-import { FetchMarketDataService } from '../fetch-market-data/fetch-market-data.service';
+import { MarketDataService } from '../market-data/market-data.service';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 import { TimeLogicService } from '../time-logic/time-logic.service';
 
@@ -19,7 +19,7 @@ export class CryptoService implements ICryptoService {
 
     constructor(
         private readonly dbService: DatabaseService,
-        private readonly fetchService: FetchMarketDataService,
+        private readonly marketDataService: MarketDataService,
         private readonly timeLogicService: TimeLogicService,
     ) { }
 
@@ -43,7 +43,7 @@ export class CryptoService implements ICryptoService {
             if (priceTimestamps.length !== timestamps.length) {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
                 // FILTER OUT MISSING PRICE STAMPS
-                const fetched = await this.fetchService.fetchData(queryDTO);
+                const fetched = await this.marketDataService.getMarketData(queryDTO);
                 console.log(fetched);
                 // FETCH SERVICE - FETCH
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
@@ -54,7 +54,7 @@ export class CryptoService implements ICryptoService {
             }
 
             // Placeholder - TRANSFORM FINAL PRICE STAMPS INTO THE DTO FORMAT
-            const data: GetCryptoDTO['data'] = priceTimestamps.map(priceStamp => (
+            const data: GetCryptoData[] = priceTimestamps.map(priceStamp => (
                 {
                     datetime: priceStamp.timestamp,
                     open: priceStamp.openPrice,

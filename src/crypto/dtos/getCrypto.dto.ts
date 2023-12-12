@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 
-class GetCryptoData {
+export class GetCryptoData {
     @IsNotEmpty()
     @IsDate()
     datetime: Date;

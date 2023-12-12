@@ -1,9 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDate, IsEnum, IsNotEmpty, IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
-class TwelveDataPriceStampDTO {
+export class TwelveDataPriceStampDTO {
     @IsNotEmpty()
     @IsDate()
     datetime: Date;
@@ -25,7 +25,7 @@ class TwelveDataPriceStampDTO {
     close: number;
 }
 
-class TwelveDataMetaDTO {
+export class TwelveDataMetaDTO {
 
     @IsNotEmpty()
     @IsEnum(CryptoTickers)
@@ -57,7 +57,7 @@ export class TwelveDataResponseDTO {
     @Type(() => TwelveDataMetaDTO)
     meta: TwelveDataMetaDTO;
 
-    @IsObject()
+    @IsArray()
     @ValidateNested({ each: true })
     @Type(() => TwelveDataPriceStampDTO)
     values: TwelveDataPriceStampDTO[];
