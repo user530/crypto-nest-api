@@ -10,44 +10,58 @@ import { AddPriceTimestampDTO } from 'src/database/dtos/priceTimestamp.dto';
 import { TimeIntervals } from 'src/shared/enums/intervals.enum';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 
-interface IMarketDataService<Output, DBStampDTO> {
+interface IMarketDataService<Output> {
     getMarketData(requestParamsDTO: RequestParamsDTO): Promise<Output>;
-    marketDataToEntity({ ticker, interval, marketData }:
-        { ticker: CryptoTickers, interval: TimeIntervals, marketData: GetCryptoData[] }): DBStampDTO[];
+    marketDataToEntity<Entity>(marketData: Output, transformer: (marketData: Output) => Entity[]): Entity[];
+    entitiesToMarketData<Entity>(entities: Entity[], transformer: (entities: Entity[]) => Output): Output;
+}
+
+interface MarketData {
+    ticker: CryptoTickers,
+    interval: TimeIntervals,
+    data: GetCryptoData[],
 }
 
 @Injectable()
-export class MarketDataService implements IMarketDataService<GetCryptoData[], AddPriceTimestampDTO> {
+export class MarketDataService implements IMarketDataService<MarketData> {
 
     constructor(private readonly configService: ConfigService) { }
 
-    async getMarketData(requestParamsDTO: RequestParamsDTO): Promise<GetCryptoData[]> {
+    async getMarketData(requestParamsDTO: RequestParamsDTO): Promise<MarketData> {
         try {
             const apiData = await this.fetchMarketData(requestParamsDTO);
             const stamps = await this.makePriceStamps(apiData);
-            return stamps;
+            return { ticker: requestParamsDTO.symbol, interval: requestParamsDTO.interval, data: stamps };
         } catch (error) {
             throw error;
         }
     }
 
-    marketDataToEntity(
-        { ticker, interval, marketData }:
-            { ticker: CryptoTickers, interval: TimeIntervals, marketData: GetCryptoData[] }
-    ): AddPriceTimestampDTO[] {
-        const dbPriceStamps: AddPriceTimestampDTO[] = marketData
-            .map(({ datetime, open, high, low, close }) => (
-                {
-                    ticker,
-                    interval,
-                    timestamp: datetime,
-                    openPrice: open,
-                    highPrice: high,
-                    lowPrice: low,
-                    closePrice: close
-                }))
-        return dbPriceStamps;
+    marketDataToEntity<Entity>(marketData: MarketData, transformer: (marketData: MarketData) => Entity[]): Entity[] {
+        return transformer(marketData);
     }
+
+    entitiesToMarketData<Entity>(entities: Entity[], transformer: (entities: Entity[]) => MarketData): MarketData {
+        return transformer(entities);
+    }
+
+    // marketDataToEntity(
+    //     { ticker, interval, marketData }:
+    //         { ticker: CryptoTickers, interval: TimeIntervals, marketData: GetCryptoData[] }
+    // ): AddPriceTimestampDTO[] {
+    //     const dbPriceStamps: AddPriceTimestampDTO[] = marketData
+    //         .map(({ datetime, open, high, low, close }) => (
+    //             {
+    //                 ticker,
+    //                 interval,
+    //                 timestamp: datetime,
+    //                 openPrice: open,
+    //                 highPrice: high,
+    //                 lowPrice: low,
+    //                 closePrice: close
+    //             }))
+    //     return dbPriceStamps;
+    // }
 
     private async fetchMarketData(requestParamsDTO: RequestParamsDTO): Promise<TwelveDataAPI> {
         const fetchConfig: FetchAPIConfig = this.configService.get<FetchAPIConfig>('fetchAPI');

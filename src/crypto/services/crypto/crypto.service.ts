@@ -9,6 +9,8 @@ import { DatabaseService } from 'src/database/database.service';
 import { MarketDataService } from '../market-data/market-data.service';
 import { CryptoTickers } from 'src/shared/enums/tickers.enum';
 import { TimeLogicService } from '../time-logic/time-logic.service';
+import { PriceTimestamp } from 'src/database/entities/priceTimestamp.entity';
+import { AddPriceTimestampDTO } from 'src/database/dtos/priceTimestamp.dto';
 
 interface ICryptoService {
     processRequest(query: Request['query']): Promise<GetCryptoDTO | ErrorDTO>
@@ -40,19 +42,49 @@ export class CryptoService implements ICryptoService {
                     queryDTO.interval,
                     timestamps);
 
-            if (priceTimestamps.length !== timestamps.length) {
+            // Transform from DB type to DTO type!!! 
+            const stampsFromDb = this.marketDataService.entitiesToMarketData<PriceTimestamp>(
+                priceTimestamps,
+                (entities: PriceTimestamp[]) => ({
+                    ticker: entities.length > 0 ? entities[0].ticker : CryptoTickers['BTC/USD'],
+                    interval: entities.length > 0 ? entities[0].interval : TimeIntervals['1 min'],
+                    data: entities.map(({ timestamp, openPrice, highPrice, lowPrice, closePrice }) => (
+                        { datetime: timestamp, open: openPrice, high: highPrice, low: lowPrice, close: closePrice }))
+                })
+
+            );
+
+            if (stampsFromDb.data.length !== timestamps.length) {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
+                // FETCH DATA FROM API AND TRANSFORM TO STAMPS
+                const stampsFromMarket = await this.marketDataService.getMarketData(queryDTO);
+
+                console.log(stampsFromDb);
+                console.log(stampsFromMarket);
+
                 // FILTER OUT MISSING PRICE STAMPS
-                const fetched = await this.marketDataService.getMarketData(queryDTO);
-                console.log(priceTimestamps);
-                console.log(fetched);
+                const existingTimestamps = stampsFromDb.data.map((stamp) => stamp.datetime.getTime());
+                const filteredStamps = {
+                    ...stampsFromMarket,
+                    data: stampsFromMarket.data.filter((stamp) => !existingTimestamps.includes(stamp.datetime.getTime()))
+                }
+
+
                 // TRANSFORM INTO DB ENTITY
-                const toInsert = this.marketDataService.marketDataToEntity(
-                    {
-                        ticker: queryDTO.symbol,
-                        interval: queryDTO.interval,
-                        marketData: fetched
-                    });
+                const toInsert = this.marketDataService.marketDataToEntity<AddPriceTimestampDTO>(
+                    filteredStamps,
+                    ({ ticker, interval, data }) => (
+                        data.map((stamp): AddPriceTimestampDTO => ({
+                            ticker,
+                            interval,
+                            timestamp: stamp.datetime,
+                            openPrice: stamp.open,
+                            highPrice: stamp.high,
+                            lowPrice: stamp.low,
+                            closePrice: stamp.close,
+                        }))
+                    )
+                )
 
                 console.log(toInsert)
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
@@ -63,7 +95,7 @@ export class CryptoService implements ICryptoService {
             }
 
             // Placeholder - TRANSFORM FINAL PRICE STAMPS INTO THE DTO FORMAT
-            const data: GetCryptoData[] = priceTimestamps.map(priceStamp => (
+            const data: GetCryptoData[] = stampsFromDb.map(priceStamp => (
                 {
                     datetime: priceStamp.timestamp,
                     open: priceStamp.openPrice,
