@@ -5,10 +5,11 @@ import { DatabaseModule } from 'src/database/database.module';
 import { DatabaseService } from 'src/database/database.service';
 import { CryptoService } from './services/crypto/crypto.service';
 import { TimeLogicService } from './services/time-logic/time-logic.service';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { fetchConfig } from 'config/fetch.config';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [ConfigModule.forFeature(fetchConfig), DatabaseModule],
   providers: [ConfigService, DatabaseService, FetchMarketDataService, CryptoService, TimeLogicService],
   controllers: [CryptoController]
 })
