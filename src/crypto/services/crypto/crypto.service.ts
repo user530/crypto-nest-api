@@ -43,7 +43,7 @@ export class CryptoService implements ICryptoService {
             if (priceTimestamps.length !== timestamps.length) {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
                 // FILTER OUT MISSING PRICE STAMPS
-                const fetched = this.fetchService.fetchData(queryDTO);
+                const fetched = await this.fetchService.fetchData(queryDTO);
                 console.log(fetched);
                 // FETCH SERVICE - FETCH
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
