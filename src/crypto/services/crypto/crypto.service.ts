@@ -34,7 +34,6 @@ export class CryptoService implements ICryptoService {
 
             console.log(timestamps);
 
-            // Not final
             const priceTimestamps = await this.dbService
                 .getTargetStamps(
                     CryptoTickers['BTC/USD'],
@@ -44,6 +43,8 @@ export class CryptoService implements ICryptoService {
             if (priceTimestamps.length !== timestamps.length) {
                 console.log('MISSING SOME DATA! NEED TO FETCH!');
                 // FILTER OUT MISSING PRICE STAMPS
+                const fetched = this.fetchService.fetchData(queryDTO);
+                console.log(fetched);
                 // FETCH SERVICE - FETCH
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
             }
