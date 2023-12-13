@@ -29,7 +29,12 @@ export class MarketDataService implements IMarketDataService<MarketData> {
     async getMarketData(requestParamsDTO: RequestParamsDTO): Promise<MarketData> {
         try {
             const apiData = await this.fetchMarketData(requestParamsDTO);
+
+            if ((apiData as any).status === 'error')
+                throw new Error((apiData as any).message);
+
             const stamps = await this.makePriceStamps(apiData);
+
             return { ticker: requestParamsDTO.symbol, interval: requestParamsDTO.interval, data: stamps };
         } catch (error) {
             throw error;

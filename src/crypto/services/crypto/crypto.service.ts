@@ -74,7 +74,6 @@ export class CryptoService implements ICryptoService {
                     data: stampsFromMarket.data.filter((stamp) => !existingTimestamps.includes(stamp.datetime.getTime()))
                 }
 
-
                 // TRANSFORM INTO DB ENTITY
                 const toInsert = this.marketDataService.marketDataToEntity<AddPriceTimestampDTO>(
                     filteredStamps,
