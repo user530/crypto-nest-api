@@ -24,10 +24,4 @@ export class CryptoController implements ICryptoController {
 
         return result;
     }
-
-    @Get('/populate')
-    async populate() {
-        await this.cryptoService.addRandom();
-        return 'Success'
-    }
 }

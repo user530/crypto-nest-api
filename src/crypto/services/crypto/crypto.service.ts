@@ -26,15 +26,11 @@ export class CryptoService implements ICryptoService {
     ) { }
 
     async processRequest(query: ParsedQs): Promise<GetCryptoDTO | ErrorDTO> {
-        console.log('Crypto Service - Process request fired!');
         try {
 
             const queryDTO = await this.validateQuery(query);
-            console.log(queryDTO);
 
             const timestamps = this.timeLogicService.generateTimestampArray(queryDTO);
-
-            console.log(timestamps);
 
             const priceTimestamps = await this.dbService
                 .getTargetStamps(
@@ -58,14 +54,10 @@ export class CryptoService implements ICryptoService {
             let resultData = stampsFromDb;
 
             if (stampsFromDb.data.length !== timestamps.length) {
-                console.log('MISSING SOME DATA! NEED TO FETCH!');
                 // FETCH DATA FROM API AND TRANSFORM TO STAMPS
                 const stampsFromMarket = await this.marketDataService.getMarketData(queryDTO);
 
                 resultData = stampsFromMarket;
-
-                console.log(stampsFromDb);
-                console.log(stampsFromMarket);
 
                 // FILTER OUT MISSING PRICE STAMPS
                 const existingTimestamps = stampsFromDb.data.map((stamp) => stamp.datetime.getTime());
@@ -90,13 +82,8 @@ export class CryptoService implements ICryptoService {
                     )
                 )
 
-                console.log(toInsert)
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
                 this.dbService.addStamps(toInsert);
-            }
-            else {
-                console.log('ALL DATA FOUND!');
-                // FINAL STAMPS = priceTimestamps;
             }
 
             // ADD META DATA
@@ -112,52 +99,12 @@ export class CryptoService implements ICryptoService {
         }
     }
 
-    async addRandom() {
-        const BTCHourStamps = [].map(({ datetime, open, high, low, close }) => (
-            {
-                ticker: CryptoTickers['BTC/USD'],
-                interval: TimeIntervals['1 hour'],
-                timestamp: new Date(datetime),
-                openPrice: parseFloat(open),
-                closePrice: parseFloat(close),
-                highPrice: parseFloat(high),
-                lowPrice: parseFloat(low)
-            }));
-
-        const BTCMinStamps = [].map(({ datetime, open, high, low, close }) => (
-            {
-                ticker: CryptoTickers['BTC/USD'],
-                interval: TimeIntervals['1 min'],
-                timestamp: new Date(datetime),
-                openPrice: parseFloat(open),
-                closePrice: parseFloat(close),
-                highPrice: parseFloat(high),
-                lowPrice: parseFloat(low)
-            }))
-
-        const ETHStamps = [].map(({ datetime, open, high, low, close }) => (
-            {
-                ticker: CryptoTickers['ETH/USD'],
-                interval: TimeIntervals['1 hour'],
-                timestamp: new Date(datetime),
-                openPrice: parseFloat(open),
-                closePrice: parseFloat(close),
-                highPrice: parseFloat(high),
-                lowPrice: parseFloat(low)
-            }));
-
-        return await this.dbService.addStamps([...BTCHourStamps, ...ETHStamps, ...BTCMinStamps]);
-    }
-
     private async validateQuery(query: ParsedQs): Promise<RequestParamsDTO> {
-        console.log('Crypto Service - Validate Query Fired!');
-
         const queryDTO = plainToClass(RequestParamsDTO, query, { enableImplicitConversion: true });
 
         const validationErrors = await validate(queryDTO);
 
         if (validationErrors.length !== 0) {
-            console.log(validationErrors)
             const errStr = validationErrors
                 .map(
                     err => Object

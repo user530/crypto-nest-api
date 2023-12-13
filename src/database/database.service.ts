@@ -15,8 +15,6 @@ export class DatabaseService {
     ) { }
 
     getAll(): Promise<PriceTimestamp[]> {
-        console.log('DB Service - Get all fired!');
-
         return this.priceStampRepo.find({});
     }
 
@@ -31,8 +29,6 @@ export class DatabaseService {
     }
 
     async addStamps(timeStampDTOs: AddPriceTimestampDTO | AddPriceTimestampDTO[]): Promise<PriceTimestamp[]> {
-        console.log('DB Service - Add stamp fired!');
-
         const stamps: PriceTimestamp[] = Array.isArray(timeStampDTOs)
             ? await this.priceStampRepo.create(timeStampDTOs)
             : [await this.priceStampRepo.create(timeStampDTOs)];

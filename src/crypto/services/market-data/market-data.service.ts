@@ -72,11 +72,11 @@ export class MarketDataService implements IMarketDataService<MarketData> {
             throw new Error('Failed to convert market data into the stamps!');
         }
 
-        // Transform DTO values into required output (fix implicit datetime conversion that adds timezone offset )
+        // Transform DTO values into required output
         const priceStamps: GetCryptoData[] = marketDataDTO
             .values
             .map(({ datetime, open, high, low, close }) => ({
-                datetime: new Date(datetime.getTime() - datetime.getTimezoneOffset() * 1000 * 60),
+                datetime: new Date(datetime.getTime()),
                 open, high, low, close
             }));
 
