@@ -92,6 +92,7 @@ export class CryptoService implements ICryptoService {
 
                 console.log(toInsert)
                 // DB SERVICE - ADD DATA FOR MISSING PRICE STAMPS 
+                this.dbService.addStamps(toInsert);
             }
             else {
                 console.log('ALL DATA FOUND!');

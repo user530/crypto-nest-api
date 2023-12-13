@@ -49,24 +49,6 @@ export class MarketDataService implements IMarketDataService<MarketData> {
         return transformer(entities);
     }
 
-    // marketDataToEntity(
-    //     { ticker, interval, marketData }:
-    //         { ticker: CryptoTickers, interval: TimeIntervals, marketData: GetCryptoData[] }
-    // ): AddPriceTimestampDTO[] {
-    //     const dbPriceStamps: AddPriceTimestampDTO[] = marketData
-    //         .map(({ datetime, open, high, low, close }) => (
-    //             {
-    //                 ticker,
-    //                 interval,
-    //                 timestamp: datetime,
-    //                 openPrice: open,
-    //                 highPrice: high,
-    //                 lowPrice: low,
-    //                 closePrice: close
-    //             }))
-    //     return dbPriceStamps;
-    // }
-
     private async fetchMarketData(requestParamsDTO: RequestParamsDTO): Promise<TwelveDataAPI> {
         const fetchConfig: FetchAPIConfig = this.configService.get<FetchAPIConfig>('fetchAPI');
         const fetchURL: string = fetchConfig.API_BASE + fetchConfig.API_ENDPOINT + fetchConfig.API_KEY;
@@ -84,7 +66,6 @@ export class MarketDataService implements IMarketDataService<MarketData> {
         const marketDataDTO = plainToClass(TwelveDataResponseDTO, marketData, { enableImplicitConversion: true });
 
         const errs = await validate(marketDataDTO);
-
 
         // Guard clause
         if (errs.length !== 0) {
