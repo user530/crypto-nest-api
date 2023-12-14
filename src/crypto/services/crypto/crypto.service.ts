@@ -54,6 +54,8 @@ export class CryptoService implements ICryptoService {
             let resultData = stampsFromDb;
 
             if (stampsFromDb.data.length !== timestamps.length) {
+                // Time of the fetch
+                const fetchTime = new Date();
                 // FETCH DATA FROM API AND TRANSFORM TO STAMPS
                 const stampsFromMarket = await this.marketDataService.getMarketData(queryDTO);
 
@@ -63,7 +65,14 @@ export class CryptoService implements ICryptoService {
                 const existingTimestamps = stampsFromDb.data.map((stamp) => stamp.datetime.getTime());
                 const filteredStamps = {
                     ...stampsFromMarket,
-                    data: stampsFromMarket.data.filter((stamp) => !existingTimestamps.includes(stamp.datetime.getTime()))
+                    data: stampsFromMarket.data
+                        .filter(
+                            (stamp) => (
+                                !existingTimestamps.includes(stamp.datetime.getTime())
+                                // Check if the last stamp represents complete interval, meaning data will not change in the future and we can add it to the DB
+                                && this.timeLogicService.isCompleteInterval(stamp.datetime, stampsFromMarket.interval, fetchTime)
+                            )
+                        )
                 }
 
                 // TRANSFORM INTO DB ENTITY

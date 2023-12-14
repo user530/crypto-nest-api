@@ -27,6 +27,10 @@ export class TimeLogicService {
         return this.generateStampsArray(firstStamp, endDate, dateIterator);
     };
 
+    isCompleteInterval(stampDate: Date, stampInterval: TimeIntervals, queryDate: Date): boolean {
+        return (stampDate.getTime() + this.getIntervalTime(stampInterval)) <= queryDate.getTime()
+    }
+
     private getIntervalTime(timeInterval: TimeIntervals): number {
         return IntervalToTime[timeInterval];
     };
