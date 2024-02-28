@@ -15,7 +15,7 @@ export class TimeLogicService {
             dateIterator = this.nextMonthStart;
         }
         else if (interval === TimeIntervals['1 week']) {
-            firstStamp = this.closestWeekStart(endDate);
+            firstStamp = this.closestWeekStart(startDate);
             dateIterator = (date: Date) => new Date(date.getTime() + this.getIntervalTime(interval));
         }
         else {
